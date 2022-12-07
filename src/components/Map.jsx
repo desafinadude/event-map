@@ -57,7 +57,7 @@ export class Map extends React.Component {
         return (<>
 
             <MapContainer ref={this.mapRef}  center={this.state.center} zoom={this.state.zoom} scrollWheelZoom={true} style={{height: '600px'}}>
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
                 
                 {offices.map((office, index) => {
                     return (
