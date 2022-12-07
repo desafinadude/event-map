@@ -14,13 +14,25 @@ export class Map extends React.Component {
     constructor(){
         super();
         this.state = {
+            center: [-30.559482, 22.937506],
+            zoom: 6
         }
+        // reference
+        this.mapRef = React.createRef();
         
     }
 
     componentDidMount() {
 
-        console.log(offices);
+       
+        if (window.navigator.geolocation) {
+            window.navigator.geolocation.getCurrentPosition((position) => {
+                this.setState({center: [position.coords.latitude, position.coords.longitude], zoom: 13}, () => {
+                    this.mapRef.current.setView(this.state.center, this.state.zoom);
+                })
+                
+            }, console.log);
+        } 
 
 
 
@@ -39,10 +51,12 @@ export class Map extends React.Component {
     //     }
     // }
 
+    
+
     render() {
         return (<>
 
-            <MapContainer center={[-30.559482, 22.937506]} zoom={6} scrollWheelZoom={false} style={{height: '600px'}}>
+            <MapContainer ref={this.mapRef}  center={this.state.center} zoom={this.state.zoom} scrollWheelZoom={true} style={{height: '600px'}}>
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                 
                 {offices.map((office, index) => {
