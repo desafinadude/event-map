@@ -143,7 +143,7 @@ export class Map extends React.Component {
                                 <Popup>
                                     <p>
                                         {/* Icon */}
-                                        <img src={this.officeIcon(office[1])} style={{width: "25px", height: "25px", marginRight: "10px"}} />
+                                        <img src={this.officeIcon(office[1])} style={{width: "25px", height: "30px", marginRight: "10px"}} />
                                         <strong>{office[1]}</strong>
                                     </p>
 
