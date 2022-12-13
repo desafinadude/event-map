@@ -1,7 +1,7 @@
 import React from 'react';
 import axios from 'axios';
 
-import { MapContainer, TileLayer, useMap, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, useMap, Marker, Popup, Tooltip } from 'react-leaflet';
 import '../../node_modules/leaflet/dist/leaflet.css';
 
 import adviceOffices from "../icons/advice-offices.svg";
@@ -60,6 +60,17 @@ export class Map extends React.Component {
         }
     }
 
+    useLocation = () => {
+        if (window.navigator.geolocation) {
+            window.navigator.geolocation.getCurrentPosition((position) => {
+                alert(position.coords.latitude + " " + position.coords.longitude)
+                this.setState({center: [position.coords.latitude, position.coords.longitude], zoom: 13}, () => {
+                    this.mapRef.current.setView(this.state.center, this.state.zoom);
+                })
+            })
+        }
+    }
+
     closeSearch = () => {
         let self = this;
         self.setState({options: []});
@@ -95,15 +106,7 @@ export class Map extends React.Component {
                         <input type="text" placeholder="Search for your address to find assistance near you..." onChange={(e) => this.addressLookup(e.target.value)} className={this.state.loading ? 'loading' : ''}/>
                     </div>
                     <div className="map-search-container-col my-location">
-                        <button className="geolocation-btn" onClick={() => {
-                            if (window.navigator.geolocation) {
-                                window.navigator.geolocation.getCurrentPosition((position) => {
-                                    this.setState({center: [position.coords.latitude, position.coords.longitude], zoom: 13}, () => {
-                                        this.mapRef.current.setView(this.state.center, this.state.zoom);
-                                    })
-                                })
-                            }
-                        }}>Use my location</button>
+                        <button className="geolocation-btn" onClick={() => this.useLocation()}>Use my location</button>
                     </div>
                     <div className="search-options">
                         <ul>
@@ -133,6 +136,7 @@ export class Map extends React.Component {
                                     position={[parseFloat(office[9]), parseFloat(office[10])]}
                                     icon={new Icon({iconUrl: this.officeIcon(office[1]), iconSize: [25, 30], iconAnchor: [12, 30]})}
                                     >
+                                    <Tooltip>{office[0]}</Tooltip>
                                     <Popup>
                                         <p>
                                             {/* Icon */}
