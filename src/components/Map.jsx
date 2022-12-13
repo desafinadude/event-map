@@ -90,7 +90,7 @@ export class Map extends React.Component {
 
     render() {
         return (<>
-            <div className="shadow-sm" style={{position: "relative", zIndex: "99999"}}>
+            <div className="shadow-sm" style={{position: "relative", zIndex: "999"}}>
                 <Container style={{position: "relative", top: "2em"}} className="bg-white shadow-sm px-3 py-3 rounded">
                     <Row>
                         <Col>
@@ -138,7 +138,7 @@ export class Map extends React.Component {
                             <Marker 
                                 key={index}
                                 position={[parseFloat(office[9]), parseFloat(office[10])]}
-                                icon={new Icon({iconUrl: this.officeIcon(office[1]), iconSize: [25, 41], iconAnchor: [12, 41]})}
+                                icon={new Icon({iconUrl: this.officeIcon(office[1]), iconSize: [25, 30], iconAnchor: [12, 30]})}
                                 >
                                 <Popup>
                                     <p>
