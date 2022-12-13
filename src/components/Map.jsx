@@ -1,12 +1,6 @@
 import React from 'react';
 import axios from 'axios';
 
-import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
-import Button from 'react-bootstrap/Button';
-import ListGroup from 'react-bootstrap/ListGroup';
-
 import { MapContainer, TileLayer, useMap, Marker, Popup } from 'react-leaflet';
 import '../../node_modules/leaflet/dist/leaflet.css';
 
@@ -66,6 +60,11 @@ export class Map extends React.Component {
         }
     }
 
+    closeSearch = () => {
+        let self = this;
+        self.setState({options: []});
+    }
+
     officeIcon = (office) => {
 
         let iconUrl = adviceOffices;
@@ -90,93 +89,87 @@ export class Map extends React.Component {
 
     render() {
         return (<>
-            <div className="shadow-sm" style={{position: "relative", zIndex: "999"}}>
-                <Container style={{position: "relative", top: "2em"}} className="bg-white shadow-sm px-3 py-3 rounded">
-                    <Row>
-                        <Col>
-                            <div className="search-box">
-                                <input type="text" placeholder="Search for your address to find assistance near you..." onChange={(e) => this.addressLookup(e.target.value)} className={this.state.loading ? 'loading rounded' : 'rounded'}/>
-                                <div className="search-options position-absolute">
-                                    <ListGroup as="ul">
-                                        {this.state.options.map((item, index) => {
-                                            return <ListGroup.Item as="li" action key={index} onClick={() => {
-                                                this.setState({center: [item.value.lat, item.value.lon], zoom: 13}, () => {
-                                                    this.mapRef.current.setView(this.state.center, this.state.zoom);
-                                                    this.setState({options: []});
-                                                })
-                                            }}>{item.label}</ListGroup.Item>
-                                        })}
-                                    </ListGroup>
-                                </div>
-                            </div>
-                        </Col>
-                        <Col sm="auto">
-                            <div className="my-location">
-                                <Button className="geolocation-btn" onClick={() => {
-                                    if (window.navigator.geolocation) {
-                                        window.navigator.geolocation.getCurrentPosition((position) => {
-                                            this.setState({center: [position.coords.latitude, position.coords.longitude], zoom: 13}, () => {
-                                                this.mapRef.current.setView(this.state.center, this.state.zoom);
-                                            })
-                                        })
-                                    }
-                                }}>Use my location</Button>
-                            </div>
-                        </Col>
-                    </Row>
-                </Container>
+            <div className="map-search-container-header" onClick={() => this.closeSearch()}>
+                <div className="map-search-container">
+                    <div className="map-search-container-col search-box">
+                        <input type="text" placeholder="Search for your address to find assistance near you..." onChange={(e) => this.addressLookup(e.target.value)} className={this.state.loading ? 'loading' : ''}/>
+                    </div>
+                    <div className="map-search-container-col my-location">
+                        <button className="geolocation-btn" onClick={() => {
+                            if (window.navigator.geolocation) {
+                                window.navigator.geolocation.getCurrentPosition((position) => {
+                                    this.setState({center: [position.coords.latitude, position.coords.longitude], zoom: 13}, () => {
+                                        this.mapRef.current.setView(this.state.center, this.state.zoom);
+                                    })
+                                })
+                            }
+                        }}>Use my location</button>
+                    </div>
+                    <div className="search-options">
+                        <ul>
+                            {this.state.options.map((item, index) => {
+                                return <li as="li" action key={index} onClick={() => {
+                                    this.setState({center: [item.value.lat, item.value.lon], zoom: 13}, () => {
+                                        this.mapRef.current.setView(this.state.center, this.state.zoom);
+                                        this.setState({options: []});
+                                    })
+                                }}>{item.label}</li>
+                            })}
+                        </ul>
+                    </div>
+                </div>
             </div>
 
-
-            <MapContainer ref={this.mapRef} center={this.state.center} zoom={this.state.zoom} scrollWheelZoom={false} style={{height: '600px'}}>
-                <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
-                
-                {offices.map((office, index) => {
-                    return (
-                    (index != 0 && (office[9] != "" && office[10] != "")) &&
-                        
-                            <Marker 
-                                key={index}
-                                position={[parseFloat(office[9]), parseFloat(office[10])]}
-                                icon={new Icon({iconUrl: this.officeIcon(office[1]), iconSize: [25, 30], iconAnchor: [12, 30]})}
-                                >
-                                <Popup>
-                                    <p>
-                                        {/* Icon */}
-                                        <img src={this.officeIcon(office[1])} style={{width: "25px", height: "30px", marginRight: "10px"}} />
-                                        <strong>{office[1]}</strong>
-                                    </p>
-
-                                    <p>
-                                        <strong>{office[0]}</strong>
-                                        <br/>
-                                        {office[5]}
-                                    </p>
-                                    <p>
-                                        <strong>{office[7]}</strong>
-                                        <br />
-                                        {office[3] != '' ? 
-                                            <><strong>Tel: </strong> {office[3]}</>
-                                        : ''}
-                                        <br/>
-                                        {office[4] != '' ? 
-                                        <><strong>E-mail: </strong><a className="text-decoration-none" href={`mailto:${office[4]}`}>{office[4]}</a></>
-                                        : ''}
-                                        <br/>
-                                        {office[6] != '' ?
-                                        <><strong>Website: </strong><a className="text-decoration-none" href={`${office[6]}`}>{office[6]}</a></>
-                                        : ''}
-                                    </p>
-                                </Popup>
-                            </Marker>
-                       
-                    ) 
+            <div onClick={() => this.closeSearch()}>
+                <MapContainer ref={this.mapRef} center={this.state.center} zoom={this.state.zoom} scrollWheelZoom={false} style={{height: '600px'}}>
+                    <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
                     
-                })}
+                    {offices.map((office, index) => {
+                        return (
+                        (index != 0 && (office[9] != "" && office[10] != "")) &&
+                            
+                                <Marker 
+                                    key={index}
+                                    position={[parseFloat(office[9]), parseFloat(office[10])]}
+                                    icon={new Icon({iconUrl: this.officeIcon(office[1]), iconSize: [25, 30], iconAnchor: [12, 30]})}
+                                    >
+                                    <Popup>
+                                        <p>
+                                            {/* Icon */}
+                                            <img src={this.officeIcon(office[1])} style={{width: "25px", height: "30px", marginRight: "10px"}} />
+                                            <strong>{office[1]}</strong>
+                                        </p>
+
+                                        <p>
+                                            <strong>{office[0]}</strong>
+                                            <br/>
+                                            {office[5]}
+                                        </p>
+                                        <p>
+                                            <strong>{office[7]}</strong>
+                                            <br />
+                                            {office[3] != '' ? 
+                                                <><strong>Tel: </strong> {office[3]}</>
+                                            : ''}
+                                            <br/>
+                                            {office[4] != '' ? 
+                                            <><strong>E-mail: </strong><a className="text-decoration-none" href={`mailto:${office[4]}`}>{office[4]}</a></>
+                                            : ''}
+                                            <br/>
+                                            {office[6] != '' ?
+                                            <><strong>Website: </strong><a className="text-decoration-none" href={`${office[6]}`}>{office[6]}</a></>
+                                            : ''}
+                                        </p>
+                                    </Popup>
+                                </Marker>
+                        
+                        ) 
+                        
+                    })}
 
 
-            </MapContainer>
-            
+                </MapContainer>
+            </div>
            
         </>)
     }
