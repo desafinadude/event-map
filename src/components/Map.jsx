@@ -1,7 +1,7 @@
 import React from 'react';
 import axios from 'axios';
 
-import { MapContainer, TileLayer, useMap, Marker, Popup, Tooltip } from 'react-leaflet';
+import { MapContainer, TileLayer, useMap, Marker, Popup, Tooltip, ZoomControl } from 'react-leaflet';
 import '../../node_modules/leaflet/dist/leaflet.css';
 
 import adviceOffices from "../icons/advice-offices.svg";
@@ -63,7 +63,6 @@ export class Map extends React.Component {
     useLocation = () => {
         if (window.navigator.geolocation) {
             window.navigator.geolocation.getCurrentPosition((position) => {
-                alert(position.coords.latitude + " " + position.coords.longitude)
                 this.setState({center: [position.coords.latitude, position.coords.longitude], zoom: 13}, () => {
                     this.mapRef.current.setView(this.state.center, this.state.zoom);
                 })
@@ -124,9 +123,10 @@ export class Map extends React.Component {
             </div>
 
             <div onClick={() => this.closeSearch()}>
-                <MapContainer ref={this.mapRef} center={this.state.center} zoom={this.state.zoom} scrollWheelZoom={false} style={{height: '600px'}}>
+                <MapContainer ref={this.mapRef} center={this.state.center} zoom={this.state.zoom} scrollWheelZoom={false} style={{height: '600px'}} zoomControl={false}>
                     <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
-                    
+                    <ZoomControl position="bottomright"/>
+
                     {offices.map((office, index) => {
                         return (
                         (index != 0 && (office[9] != "" && office[10] != "")) &&
