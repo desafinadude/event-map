@@ -1,22 +1,16 @@
 import React from 'react';
 import axios from 'axios';
 
-import { MapContainer, TileLayer, useMap, Marker, Popup, Tooltip, ZoomControl } from 'react-leaflet';
+import L from 'leaflet';
 import '../../node_modules/leaflet/dist/leaflet.css';
+import '../../node_modules/leaflet.markercluster/dist/MarkerCluster.css';	
+import '../../node_modules/leaflet.markercluster/dist/MarkerCluster.Default.css';
+import '../../node_modules/leaflet.markercluster/dist/leaflet.markercluster.js';
 
-import adviceOffices from "../icons/advice-offices.svg";
-import legalAidSouthAfrica from "../icons/legal-aid-south-africa.svg";
-import legalPracticeCountil from "../icons/legal-practice-council.svg";
-import ngoLawClinics from "../icons/ngo-law-clinics.svg";
-import rentalHousingTribunal from "../icons/rental-housing-tribunal.svg";
-import universityLawClinics from "../icons/university-law-clinics.svg";
+import events from '../events.csv';
 
+import marker from '../icons/openup-mark.png';
 
-
-import {Icon} from 'leaflet';
-
-
-import offices from '../offices.csv';
 
 
 export class Map extends React.Component {
@@ -25,8 +19,8 @@ export class Map extends React.Component {
     constructor(){
         super();
         this.state = {
-            center: [-30.559482, 22.937506],
-            zoom: 6,
+            center: [5, 23],
+            zoom: 2,
             options: [],
             loading: false
         }
@@ -34,146 +28,84 @@ export class Map extends React.Component {
         
     }
 
-    componentDidMount() {}
+    componentDidMount() {
 
-    addressLookup = (e) => {
-        let self = this;
 
-        if (e.length > 3) {
-            // Throttle the number of requests sent
-            if (this.timeout) clearTimeout(this.timeout);
-            this.timeout = setTimeout(() => {
-                this.timeout = null;
+        var markerIcon = L.icon({
+            iconUrl: 'https://cdn.mapmarker.io/api/v1/font-awesome/v5/icon-stack?size=50&color=00975d&icon=fa-star-solid',
+            iconSize: [50,50],
+            iconAnchor: [25,25],
+            popupAnchor: [25,25],
+            shadowSize: [51,51]
 
-                axios.get(`https://nominatim.openstreetmap.org/search?q=${e}&format=json&polygon=1&addressdetails=1`)
-                .then(function (response) {
-                    
-                    self.setState({options: response.data.map((item) => {
-                        return {
-                            value: item,
-                            label: item.display_name
-                        }
-                    })})
-                })
-                
-            }, 1000);
-        }
+        });
+
+
+
+        var map = L.map('map').setView(this.state.center, this.state.zoom);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            maxZoom: 19,
+            attribution: ''
+        }).addTo(map);
+
+        var markers = L.markerClusterGroup({
+            iconCreateFunction: function (cluster) {
+                var markers = cluster.getAllChildMarkers();
+                var html = '<div class="circle">' + markers.length + '</div>';
+                return L.divIcon({ html: html, className: 'mycluster', iconSize: L.point(32, 32) });
+            },
+            showCoverageOnHover: false,
+            maxClusterRadius: 40,
+            singleMarkerMode: true,
+            animateAddingMarkers: true,
+            animate: true
+        });
+        
+
+        {events.map((event, index) => {
+            return (
+            (index != 0 && (event[9] != "" && event[10] != "")) &&
+                markers.addLayer(L.marker([event[9], event[10]], {icon: markerIcon}).bindPopup(`<p><strong>${event[0]}</strong><br/>${event[2]}</p><p>${event[1]}</p><p><strong>${event[3]}</strong></p><p>${event[5]}</p>`)))
+        })}
+       
+        markers.addTo(map);
+        
     }
 
-    useLocation = () => {
-        if (window.navigator.geolocation) {
-            window.navigator.geolocation.getCurrentPosition((position) => {
-                this.setState({center: [position.coords.latitude, position.coords.longitude], zoom: 13}, () => {
-                    this.mapRef.current.setView(this.state.center, this.state.zoom);
-                })
-            })
-        }
-    }
+    
 
-    closeSearch = () => {
-        let self = this;
-        self.setState({options: []});
-    }
+    
 
-    officeIcon = (office) => {
+   
 
-        let iconUrl = adviceOffices;
+    personIcon = (person) => {
 
-        if(office == "Advice Offices") {
-            iconUrl = adviceOffices;
-        } else if(office == "Legal Aid South Africa") {
-            iconUrl = legalAidSouthAfrica;
-        } else if(office == "Legal Practice Council") {
-            iconUrl = legalPracticeCountil;
-        } else if(office == "NGO Law Clinics") {
-            iconUrl = ngoLawClinics;
-        } else if(offices == "Rental Housing Tribunal") {
-            iconUrl = rentalHousingTribunal;
-        } else if(office == "University Law Clinics") {
-            iconUrl = universityLawClinics;
-        }
+        let iconUrl = marker;
+
+        // if(person == "Advice Offices") {
+        //     iconUrl = adviceOffices;
+        // } 
 
         return iconUrl;
 
     }
 
     render() {
+        
+        
         return (<>
-            <div className="map-search-container-header" onClick={() => this.closeSearch()}>
-                <div className="map-search-container">
-                    <div className="map-search-container-col search-box">
-                        <input type="text" placeholder="Search for your address to find assistance near you..." onChange={(e) => this.addressLookup(e.target.value)} className={this.state.loading ? 'loading' : ''}/>
-                    </div>
-                    <div className="map-search-container-col my-location">
-                        <button className="geolocation-btn" onClick={() => this.useLocation()}>Use my location</button>
-                    </div>
-                    <div className="search-options">
-                        <ul>
-                            {this.state.options.map((item, index) => {
-                                return <li as="li" action key={index} onClick={() => {
-                                    this.setState({center: [item.value.lat, item.value.lon], zoom: 13}, () => {
-                                        this.mapRef.current.setView(this.state.center, this.state.zoom);
-                                        this.setState({options: []});
-                                    })
-                                }}>{item.label}</li>
-                            })}
-                        </ul>
-                    </div>
-                </div>
-            </div>
+            
+            {/* <MapContainer ref={this.mapRef} center={this.state.center} zoom={this.state.zoom} scrollWheelZoom={false} style={{height: '600px'}} zoomControl={false}>
+                <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
+                <ZoomControl position="bottomright"/>
 
-            <div onClick={() => this.closeSearch()}>
-                <MapContainer ref={this.mapRef} center={this.state.center} zoom={this.state.zoom} scrollWheelZoom={false} style={{height: '600px'}} zoomControl={false}>
-                    <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
-                    <ZoomControl position="bottomright"/>
-
-                    {offices.map((office, index) => {
-                        return (
-                        (index != 0 && (office[9] != "" && office[10] != "")) &&
-                            
-                                <Marker 
-                                    key={index}
-                                    position={[parseFloat(office[9]), parseFloat(office[10])]}
-                                    icon={new Icon({iconUrl: this.officeIcon(office[1]), iconSize: [25, 30], iconAnchor: [12, 30]})}
-                                    >
-                                    <Tooltip>{office[0]}</Tooltip>
-                                    <Popup>
-                                        <p>
-                                            {/* Icon */}
-                                            <img src={this.officeIcon(office[1])} style={{width: "25px", height: "30px", marginRight: "10px"}} />
-                                            <strong>{office[1]}</strong>
-                                        </p>
-
-                                        <p>
-                                            <strong>{office[0]}</strong>
-                                            <br/>
-                                            {office[5]}
-                                        </p>
-                                        <p>
-                                            <strong>{office[7]}</strong>
-                                            <br />
-                                            {office[3] != '' ? 
-                                                <><strong>Tel: </strong> {office[3]}</>
-                                            : ''}
-                                            <br/>
-                                            {office[4] != '' ? 
-                                            <><strong>E-mail: </strong><a className="text-decoration-none" href={`mailto:${office[4]}`}>{office[4]}</a></>
-                                            : ''}
-                                            <br/>
-                                            {office[6] != '' ?
-                                            <><strong>Website: </strong><a className="text-decoration-none" href={`${office[6]}`}>{office[6]}</a></>
-                                            : ''}
-                                        </p>
-                                    </Popup>
-                                </Marker>
-                        
-                        ) 
-                        
-                    })}
+                
 
 
-                </MapContainer>
-            </div>
+            </MapContainer> */}
+
+            <div id="map" style={{height: '400px'}}></div>
+            
            
         </>)
     }
